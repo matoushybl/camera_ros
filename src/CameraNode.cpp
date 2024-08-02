@@ -177,6 +177,11 @@ CameraNode::CameraNode(const rclcpp::NodeOptions &options) : Node("camera", opti
   // camera ID
   declare_parameter("camera", rclcpp::ParameterValue {}, param_descr_ro.set__dynamic_typing(true));
 
+  rcl_interfaces::msg::ParameterDescriptor param_descr_frame;
+  param_descr_frame.read_only = true;
+  param_descr_frame.description = "Id of a frame assigned to output images.";
+  declare_parameter<std::string>("frame_id", "camera", param_descr_frame);
+
   rcl_interfaces::msg::ParameterDescriptor jpeg_quality_description;
   jpeg_quality_description.name = "jpeg_quality";
   jpeg_quality_description.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
@@ -585,7 +590,7 @@ CameraNode::process(libcamera::Request *const request)
       // send image data
       std_msgs::msg::Header hdr;
       hdr.stamp = rclcpp::Time(time_offset + int64_t(metadata.timestamp));
-      hdr.frame_id = "camera";
+      hdr.frame_id = get_parameter("frame_id").as_string();
       const libcamera::StreamConfiguration &cfg = stream->configuration();
 
       auto msg_img = std::make_unique<sensor_msgs::msg::Image>();
